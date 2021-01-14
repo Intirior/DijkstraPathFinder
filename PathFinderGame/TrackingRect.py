@@ -5,7 +5,7 @@ pygame.init()
 
 WINSIZE = (840, 840) # window size
 
-RectSize =35 # the size of each square
+RectSize =30 # the size of each square
 
 assert WINSIZE[0]%RectSize==0 and WINSIZE[1]%RectSize==0, " height/width does not divide equally by RectSize"
 
