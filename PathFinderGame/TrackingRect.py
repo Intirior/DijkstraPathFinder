@@ -5,7 +5,7 @@ pygame.init()
 
 WINSIZE = (840, 840) # window size
 
-RectSize =30 # the size of each square
+RectSize =35 # the size of each square
 
 assert WINSIZE[0]%RectSize==0 and WINSIZE[1]%RectSize==0, " height/width does not divide equally by RectSize"
 
@@ -20,8 +20,6 @@ menu = pygame_menu.Menu(height=WINSIZE[1], width=WINSIZE[0], title='Settings', t
 
 Bg = pygame.transform.scale(pygame.image.load("MapImages/Bg.jpg"), WINSIZE)
 
-# game rules: use left click at the beginning to draw the gray blocks press space if you want to place the red and blue rects blue rect use left click to draw red and right click to
-# draw bluc and the middle to draw again the gray blocks and eventually press e is you want to erase all the gray blocks on the screen
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Board:
@@ -320,8 +318,8 @@ while not InZone:
             dijkstra.Spread()
             dijkstra.UpdateCloseSet(startBlocks.AlgoPlayerNode)
             OneTimeRun = 1
-        #dijkstra.DrawSpreading()
-        #dijkstra.DrawPath()
+        #dijkstra.DrawSpreading() # Draw the spreading of the nodes
+        #dijkstra.DrawPath() # draw the path that the algo player following
         startBlocks.AlgoPlayerNode = dijkstra.MoveAfterPlayerNode()
 
     startBlocks.DrawGrayBlocks()
