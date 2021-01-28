@@ -187,7 +187,7 @@ class Dijkstra:
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class MapManagement():
-    imagePath = 'D:\PycharmProjects\DijkstraPathFinder\PathFinderGame\MapImages\GameImage.png'
+    imagePath = 'PathFinderGame\MapImages\GameImage.png'
     def __init__(self,win,menu):
         self.win = win
         self.menu = menu
