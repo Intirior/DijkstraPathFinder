@@ -1,7 +1,13 @@
-import pygame,pygame_menu,json
+import pygame
+import pygame_menu
+import json
+import random
 from pygame import mouse
 
 pygame.init()
+
+pygame.mouse.set_visible(False)
+pygame.mouse.set_cursor(*pygame.cursors.diamond)
 
 WINSIZE = (840, 840) # window size
 
@@ -67,6 +73,7 @@ class BlockManagement:
         self.MidleClick = mouse.get_pressed()[1]
         self.RightClick = mouse.get_pressed()[2]
         self.MouseRect = pygame.Rect(mouse.get_pos(),(1,1))
+
 
     def DrawGrayBlocks(self):
         for pos in self.GrayBlocks:
@@ -271,6 +278,21 @@ class PlayerNodeClass:
     def DrawPlayerNode(self):
         pygame.draw.rect(self.win, self.blue,(self.pos[0], self.pos[1], self.RectSize, self.RectSize))
 
+class Sparkles:
+    def __init__(self):
+        self.particles=[]
+    def ParticleExplosion(self,pos,color):
+        for _ in range(5):
+            self.particles.append(
+                [[pos[0], pos[1]], [random.randint(-7, 7) / 7, random.randint(-1, 1)], random.randint(4, 7)])
+        for particle in self.particles:
+            particle[0][0] += particle[1][0]
+            particle[0][1] += particle[1][1]
+            particle[2] -= 0.5
+            pygame.draw.circle(win, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
+            if particle[2] <= 0:
+                self.particles.remove(particle)
+
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 menuScreen  = MapManagement(win=win, menu=menu)
@@ -283,9 +305,13 @@ dijkstra = Dijkstra(win = win, RectSize = RectSize, AllBlocks= board.AllBlocks)
 
 player = PlayerNodeClass(RectSize = RectSize , PlayerNode = startBlocks.PlayerNode, win = win)
 
+sparkle = Sparkles()
+
 ConvertMap = [] # when i get the uploaded map it is a list with lists in side of it so i convert the lists to tuple
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+visibility = pygame.mouse.set_visible
 
 OneTimeRun = 0
 
@@ -338,5 +364,20 @@ while not InZone:
 
     startBlocks.PlayerNode = player.movement()
     player.DrawPlayerNode()
+
+    if startBlocks.BlockType == "gray":
+        color = (255,0,0)
+    else:
+        color = (255,255,255)
+
+    if pygame.mouse.get_pressed()[0] and startBlocks.BlockType == "gray":
+        visibility(False)
+        sparkle.ParticleExplosion(pygame.mouse.get_pos(),(255,255,255))
+    elif pygame.mouse.get_pressed()[1]:
+        visibility(False)
+        sparkle.ParticleExplosion(pygame.mouse.get_pos(), color)
+    else:
+        sparkle.particles=[]
+        visibility(True)
 
     pygame.display.update()
