@@ -9,7 +9,7 @@ pygame.init()
 pygame.mouse.set_visible(False)
 pygame.mouse.set_cursor(*pygame.cursors.diamond)
 
-WINSIZE = (840, 840) # window size
+WINSIZE = (910,840) # window size optional (840,840) or (910,840)
 
 RectSize =35 # the size of each square
 
@@ -62,7 +62,7 @@ class BlockManagement:
         self.AllBlocks = AllBlocks
         self.BlockType = "gray"
         self.GrayBlocks = []
-        self.BlockRect =[pygame.Rect(pos,(self.RectSize,self.RectSize)) for pos in AllBlocks]
+        #self.BlockRect =[pygame.Rect(pos,(self.RectSize,self.RectSize)) for pos in AllBlocks]
         self.PlayerNode = (-100, -100)
         self.AlgoPlayerNode = (-100, -100)
         self.WalkByShortestPath = 0 # walk through the shortest path list
@@ -74,7 +74,6 @@ class BlockManagement:
         self.RightClick = mouse.get_pressed()[2]
         self.MouseRect = pygame.Rect(mouse.get_pos(),(1,1))
 
-
     def DrawGrayBlocks(self):
         for pos in self.GrayBlocks:
             pygame.draw.rect(self.win,self.gray,(pos[0],pos[1],self.RectSize,self.RectSize))
@@ -82,8 +81,9 @@ class BlockManagement:
     def EraseGrayBlocks(self):
         self.GrayBlocks.clear()
 
-    def BlockListModify(self):
+    def BlockListModify(self,AllBlocks):
         self.__MouseClicks()
+        ''' remove the comment in the init of self.BlockRect
         for rect in self.BlockRect:
             if rect.colliderect(self.MouseRect):
                 if self.BlockType == "gray":
@@ -99,8 +99,28 @@ class BlockManagement:
                         if self.RightClick and (rect.x, rect.y) != self.PlayerNode:
                             self.AlgoPlayerNode = (rect.x, rect.y)
                     # The Gray blocks list appending the gray blocks created while the playing
-                    if (rect.x,rect.y) != self.AlgoPlayerNode and (rect.x, rect.y) != self.PlayerNode and self.MidleClick:
-                        self.GrayBlocks.append((rect.x,rect.y))
+                    if (rect.x, rect.y) != self.AlgoPlayerNode and (
+                    rect.x, rect.y) != self.PlayerNode and self.MidleClick:
+                        self.GrayBlocks.append((rect.x, rect.y))'''
+        for rect in AllBlocks:
+            if rect[0]+self.RectSize>mouse.get_pos()[0]>=rect[0] and rect[1]+self.RectSize>mouse.get_pos()[1]>=rect[1]:
+                if self.BlockType == "gray":
+                    if self.LeftClick and (rect[0], rect[1]) not in self.GrayBlocks:
+                        self.GrayBlocks.append((rect[0], rect[1]))
+                    if self.MidleClick and (rect[0], rect[1]) in self.GrayBlocks or [rect[0], rect[1]] in self.GrayBlocks:
+                        self.GrayBlocks.remove((rect[0], rect[1]))
+                else:
+                    if (rect[0], rect[1]) not in self.GrayBlocks:
+                        if self.LeftClick and (rect[0], rect[1]) != self.AlgoPlayerNode:
+                            self.PlayerNode = (rect[0], rect[1])
+                            self.PlayerNodeChangePos = True
+                        if self.RightClick and (rect[0], rect[1]) != self.PlayerNode:
+                            self.AlgoPlayerNode = (rect[0], rect[1])
+                    # The Gray blocks list appending the gray blocks created while the playing
+                    if (rect[0], rect[1]) != self.AlgoPlayerNode and (
+                            rect[0], rect[1]) != self.PlayerNode and self.MidleClick:
+                        self.GrayBlocks.append((rect[0],rect[1]))
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -316,8 +336,10 @@ visibility = pygame.mouse.set_visible
 OneTimeRun = 0
 
 InZone = False
+clock = pygame.time.Clock()
 
 while not InZone:
+    clock.tick(-1)
     menuScreen.IsUploaded = False
     startBlocks.PlayerNodeChangePos = False
     win.blit(Bg,(0,0))
@@ -349,7 +371,7 @@ while not InZone:
         startBlocks.AlgoPlayerNode = dijkstra.MoveAfterPlayerNode()
 
     startBlocks.DrawGrayBlocks()
-    startBlocks.BlockListModify()
+    startBlocks.BlockListModify(board.AllBlocks)
     menuScreen.MenuSurface(startBlocks.GrayBlocks)
     dijkstra.DrawAlgoNode(startBlocks.AlgoPlayerNode)
 
