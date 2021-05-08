@@ -8,3 +8,4 @@
 4 - to save map to list after creating the map or after the creating while playing, go to the menu (with esc button) and click on the save button
 5 - any time you go to menu and change the map then repeat step number 3
 6 - you can remove any map from your list in the menu by putting the map you want to remove in the remove scroller and then press the remove button
+7 - you can use the ability of ctrl+z (restore what has been removed)

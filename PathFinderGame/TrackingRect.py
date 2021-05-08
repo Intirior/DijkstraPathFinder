@@ -9,6 +9,8 @@ pygame.init()
 pygame.mouse.set_visible(False)
 pygame.mouse.set_cursor(*pygame.cursors.diamond)
 
+pygame.display.set_caption("Catch the Block")
+
 WINSIZE = (910,840) # window size optional (840,840) or (910,840)
 
 RectSize =35 # the size of each square
@@ -62,6 +64,7 @@ class BlockManagement:
         self.AllBlocks = AllBlocks
         self.BlockType = "gray"
         self.GrayBlocks = []
+        self.DeletedBlocks = []
         #self.BlockRect =[pygame.Rect(pos,(self.RectSize,self.RectSize)) for pos in AllBlocks]
         self.PlayerNode = (-100, -100)
         self.AlgoPlayerNode = (-100, -100)
@@ -79,35 +82,25 @@ class BlockManagement:
             pygame.draw.rect(self.win,self.gray,(pos[0],pos[1],self.RectSize,self.RectSize))
 
     def EraseGrayBlocks(self):
+        self.DeletedBlocks = self.GrayBlocks.copy()
         self.GrayBlocks.clear()
+
+
+    def RestoreGrayBlocks(self):
+        if len(self.DeletedBlocks)>0:
+            self.GrayBlocks.append(self.DeletedBlocks.pop(0))
+
+
 
     def BlockListModify(self,AllBlocks):
         self.__MouseClicks()
-        ''' remove the comment in the init of self.BlockRect
-        for rect in self.BlockRect:
-            if rect.colliderect(self.MouseRect):
-                if self.BlockType == "gray":
-                    if self.LeftClick and (rect.x, rect.y) not in self.GrayBlocks:
-                        self.GrayBlocks.append((rect.x, rect.y))
-                    if self.MidleClick and (rect.x, rect.y) in self.GrayBlocks or [rect.x, rect.y] in self.GrayBlocks:
-                        self.GrayBlocks.remove((rect.x, rect.y))
-                else:
-                    if (rect.x, rect.y) not in self.GrayBlocks:
-                        if self.LeftClick and (rect.x, rect.y) != self.AlgoPlayerNode:
-                            self.PlayerNode = (rect.x, rect.y)
-                            self.PlayerNodeChangePos = True
-                        if self.RightClick and (rect.x, rect.y) != self.PlayerNode:
-                            self.AlgoPlayerNode = (rect.x, rect.y)
-                    # The Gray blocks list appending the gray blocks created while the playing
-                    if (rect.x, rect.y) != self.AlgoPlayerNode and (
-                    rect.x, rect.y) != self.PlayerNode and self.MidleClick:
-                        self.GrayBlocks.append((rect.x, rect.y))'''
         for rect in AllBlocks:
             if rect[0]+self.RectSize>mouse.get_pos()[0]>=rect[0] and rect[1]+self.RectSize>mouse.get_pos()[1]>=rect[1]:
                 if self.BlockType == "gray":
                     if self.LeftClick and (rect[0], rect[1]) not in self.GrayBlocks:
                         self.GrayBlocks.append((rect[0], rect[1]))
                     if self.MidleClick and (rect[0], rect[1]) in self.GrayBlocks or [rect[0], rect[1]] in self.GrayBlocks:
+                        self.DeletedBlocks.insert(0,(rect[0],rect[1]))
                         self.GrayBlocks.remove((rect[0], rect[1]))
                 else:
                     if (rect[0], rect[1]) not in self.GrayBlocks:
@@ -120,7 +113,6 @@ class BlockManagement:
                     if (rect[0], rect[1]) != self.AlgoPlayerNode and (
                             rect[0], rect[1]) != self.PlayerNode and self.MidleClick:
                         self.GrayBlocks.append((rect[0],rect[1]))
-
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -300,18 +292,39 @@ class PlayerNodeClass:
 
 class Sparkles:
     def __init__(self):
-        self.particles=[]
-    def ParticleExplosion(self,pos,color):
+        self.__particles=[]
+        self.__visibility = pygame.mouse.set_visible
+        self.__color = (255, 0, 0)
+
+    def __ParticleExplosion(self,pos,color):
         for _ in range(5):
-            self.particles.append(
-                [[pos[0], pos[1]], [random.randint(-7, 7) / 7, random.randint(-1, 1)], random.randint(4, 7)])
-        for particle in self.particles:
+            self.__particles.append([[pos[0], pos[1]], [random.randint(-7, 7) / 7, random.randint(-1, 1)], random.randint(4, 7)])
+        for particle in self.__particles:
             particle[0][0] += particle[1][0]
             particle[0][1] += particle[1][1]
             particle[2] -= 0.5
             pygame.draw.circle(win, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
             if particle[2] <= 0:
-                self.particles.remove(particle)
+                self.__particles.remove(particle)
+
+
+    def __ColorSwitch(self):
+        if startBlocks.BlockType == "gray":
+            self.__color = (255, 0, 0)
+        else:
+            self.__color = (255, 255, 255)
+
+    def CurserModeHandler(self,BlockType):
+        self.__ColorSwitch()
+        if pygame.mouse.get_pressed()[0] and BlockType == "gray":
+            self.__visibility(False)
+            self.__ParticleExplosion(pygame.mouse.get_pos(), (255, 255, 255))
+        elif pygame.mouse.get_pressed()[1]:
+            self.__visibility(False)
+            self.__ParticleExplosion(pygame.mouse.get_pos(), self.__color)
+        else:
+            self.__particles = []
+            self.__visibility(True)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -331,18 +344,20 @@ ConvertMap = [] # when i get the uploaded map it is a list with lists in side of
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-visibility = pygame.mouse.set_visible
 
 OneTimeRun = 0
 
 InZone = False
-clock = pygame.time.Clock()
+
 
 while not InZone:
-    clock.tick(-1)
+    print(startBlocks.DeletedBlocks)
+    win.blit(Bg, (0, 0))
+
     menuScreen.IsUploaded = False
     startBlocks.PlayerNodeChangePos = False
-    win.blit(Bg,(0,0))
+
+    keys = pygame.key.get_pressed()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -355,8 +370,13 @@ while not InZone:
             if event.key == pygame.K_ESCAPE:
                 menu.enable()
 
+    if keys[pygame.K_LCTRL]:
+        if keys[pygame.K_z]:
+            startBlocks.RestoreGrayBlocks()
+
     if startBlocks.BlockType == "other" and startBlocks.PlayerNode != (-100, -100) and startBlocks.AlgoPlayerNode != (-100, -100):
-        for _ in range(5000):
+        #while startBlocks.PlayerNode not in dijkstra.shortestPath or dijkstra.CurrentNodes:
+        for _ in range(1000):
             if dijkstra.previousAlgoPlayerPos != startBlocks.AlgoPlayerNode or dijkstra.previousPlayerNodePos != startBlocks.PlayerNode:
                 startBlocks.WalkByShortesPath = 0 # erase if you want to move your char
                 OneTimeRun = 0
@@ -387,19 +407,6 @@ while not InZone:
     startBlocks.PlayerNode = player.movement()
     player.DrawPlayerNode()
 
-    if startBlocks.BlockType == "gray":
-        color = (255,0,0)
-    else:
-        color = (255,255,255)
-
-    if pygame.mouse.get_pressed()[0] and startBlocks.BlockType == "gray":
-        visibility(False)
-        sparkle.ParticleExplosion(pygame.mouse.get_pos(),(255,255,255))
-    elif pygame.mouse.get_pressed()[1]:
-        visibility(False)
-        sparkle.ParticleExplosion(pygame.mouse.get_pos(), color)
-    else:
-        sparkle.particles=[]
-        visibility(True)
+    sparkle.CurserModeHandler(startBlocks.BlockType)
 
     pygame.display.update()
